@@ -1,0 +1,28 @@
+---
+- name: Installing the Unifi Controller
+  hosts: raspberries
+  gather_facts: true
+  become: true
+  vars:
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no"
+    mariadb_root_password: "rootmariadb@pnk"
+    wordpress_db_password: "wrdmariadb@pnk"
+  tasks:
+    - name: Update the apt cache and upgrade packages
+      apt:
+        update_cache: yes
+        upgrade: dist
+
+    - name: Install ca-certificates and curl
+      apt:
+        name:
+          - ca-certificates
+          - curl
+        state: present
+
+    # - name: Download and execute the UniFi installation script
+    #   shell: |
+    #     curl -sO https://get.glennr.nl/unifi/install/install_latest/unifi-latest.sh
+    #     bash unifi-latest.sh
+    #   args:
+    #     chdir: /tmp # Switch to /tmp directory before executing the script

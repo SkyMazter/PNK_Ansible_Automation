@@ -1,0 +1,202 @@
+---
+- name: Creating pnk server image
+  hosts: raspberries
+  gather_facts: true
+  become: true
+  vars:
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no"
+    mariadb_root_password: "rootmariadb@pnk"
+
+  #####################################################
+  # SET UP YOUR RASPBERRY PI WITH THE FOLLOWING STEPS #
+  #####################################################
+
+  tasks:
+    # preliminary housekeeping stuff
+    - name: Print the operating system
+      debug:
+        msg: "The operating system is {{ ansible_distribution }} {{ ansible_distribution_version }}"
+
+    - name: Update apt repository
+      apt:
+        update_cache: true
+
+    - name: Install curl (if not already installed)
+      apt:
+        name: curl
+        state: present
+
+    # setting up the webserver
+    - name: Install Apache2 on Raspberry Pi
+      apt:
+        name: apache2
+        state: present
+
+    - name: Ensure Apache is running and enabled at boot
+      service:
+        name: apache2
+        state: started
+        enabled: true
+
+    # installing dependancies for applications
+
+    - name: Install Git
+      apt:
+        name: git
+        state: present
+
+    - name: Install MariaDB
+      apt:
+        name: mariadb-server
+
+    - name: install php
+      apt:
+        name: php
+
+    - name: Download Node.js setup script
+      shell: curl -sL https://deb.nodesource.com/setup_16.x | bash -
+
+    - name: Install Node.js
+      apt:
+        name: nodejs
+        state: present
+
+    - name: Check Node.js version
+      command: node -v
+      register: node_version
+
+    - name: Display Node.js version
+      debug:
+        msg: "Node.js version is {{ node_version.stdout }}"
+
+    # install wordpress
+    - name: Ensure /var/www/html directory exists
+      file:
+        path: /var/www/html
+        state: directory
+
+    - name: Remove all files in /var/www/html
+      file:
+        path: /var/www/html
+        state: absent
+        recurse: yes
+      ignore_errors: yes # In case directory is already empty
+
+    - name: Download latest WordPress tar.gz
+      get_url:
+        url: http://wordpress.org/latest.tar.gz
+        dest: /var/www/html/latest.tar.gz
+
+    - name: Extract WordPress archive
+      ansible.builtin.unarchive:
+        src: /var/www/html/latest.tar.gz
+        dest: /var/www/html
+        remote_src: yes
+
+    - name: Ensure WordPress directory exists
+      stat:
+        path: /var/www/html/wordpress
+      register: wordpress_dir
+
+    - name: Move WordPress files to /var/www/html (if wordpress folder exists)
+      shell: mv /var/www/html/wordpress/* /var/www/html/
+      when: wordpress_dir.stat.exists
+
+    - name: Remove WordPress folder
+      file:
+        path: /var/www/html/wordpress
+        state: absent
+        recurse: yes
+      when: wordpress_dir.stat.exists
+
+    - name: Remove latest.tar.gz file
+      file:
+        path: /var/www/html/latest.tar.gz
+        state: absent
+
+    - name: Set ownership of /var/www/html to www-data
+      file:
+        path: /var/www/html
+        state: directory
+        recurse: yes
+        owner: www-data
+        group: www-data
+
+    - name: Remove the apache html file
+      file:
+        path: /var/www/html/index.html
+        state: absent
+
+    #Configure mysql
+    - name: Ensure required Python libraries are installed
+      apt:
+        name: python3-mysqldb
+        state: present
+      when: ansible_python_version is version('3', '>=') # For Python 3
+
+    - name: Ensure mariaDB service is started
+      service:
+        name: mariadb
+        state: started
+        enabled: yes
+
+    - name: Set MariaDB root password
+      mysql_user:
+        name: root
+        password: "{{ mariadb_root_password }}"
+        host: localhost
+        state: present
+        login_user: root
+        login_password: "" # Leave empty for first run; use root password later
+
+    - name: Remove anonymous MariaDB users
+      mysql_user:
+        name: ""
+        state: absent
+        login_user: root
+        login_password: "{{ mariadb_root_password }}"
+
+    - name: Disallow root login remotely
+      mysql_user:
+        name: root
+        host: "%"
+        state: absent
+        login_user: root
+        login_password: "{{ mariadb_root_password }}"
+
+    - name: Remove the test database
+      mysql_db:
+        name: test
+        state: absent
+        login_user: root
+        login_password: "{{ mariadb_root_password }}"
+
+    - name: Install PHP MySQL extension
+      apt:
+        name: php-mysql
+        state: present
+
+    - name: Restart Apache service (or your web server)
+      service:
+        name: apache2
+        state: restarted
+    #setting up the wordpress database in mariadb
+    - name: Install MariaDB client
+      apt:
+        name: mariadb-client
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Grant privileges to root user on WordPress database
+      mysql_user:
+        name: root
+        host: localhost
+        password: "{{ mariadb_root_password }}"
+        priv: "wordpress.*:ALL"
+        state: present
+        login_user: root
+        login_password: "{{ mariadb_root_password }}"
+    #server reboot
+    - name: Reboot the Raspberry Pi
+      reboot:
+        msg: "Reboot initiated by Ansible"
