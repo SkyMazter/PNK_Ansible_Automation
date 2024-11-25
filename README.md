@@ -36,7 +36,7 @@ For more info click <a href="https://brew.sh">here.</a>
 ### Windows
 
 As of right now you cannot use a windows machine as a control node. (Read more <a href="https://docs.ansible.com/ansible/latest/os_guide/intro_windows.html#windows-control-node">here.</a>)
-Therefor you will need to install the Windows Subsystem for Linux (WSL).
+Therefore you will need to install the Windows Subsystem for Linux (WSL).
 
 Official install guide <a href="https://learn.microsoft.com/en-us/windows/wsl/install">here.</a>
 
@@ -45,3 +45,37 @@ Official install guide <a href="https://learn.microsoft.com/en-us/windows/wsl/in
 For your specific distribution of linux, please refer to the <a href="https://docs.ansible.com/ansible/latest/installation_guide/index.html">ansible documentation.</a>
 
 ## <a name="usage"> Usage </a>
+
+### Set up
+
+First you will need to edit the inventory file, there are three main thing you will need to change.
+
+1. The ip address of the raspberry pi in your local network
+2. The username of the Pi
+3. The password of the Pi
+
+Then you will change your directory to be inside of the playbooks folder within your terminal.
+
+### Running the Playbook
+
+Once in the directory, run the following commands:
+
+```bash
+#To install wordpress and setup webserver
+sudo ansible-playbook -i inventory wordpress_install.yml
+```
+
+```bash
+#To setup unifi_install script
+sudo ansible-playbook -i inventory unifi_install.yml
+```
+
+### finishing touches
+
+Its at this point that you should be able to enter
+After running the unifi command, you will need to ssh into your pi and run the following command run the porper install script that is inside the bash file.
+
+```bash
+#To run unifi controller install script
+sudo ./unifi_install.sh
+```
