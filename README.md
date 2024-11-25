@@ -100,3 +100,14 @@ After running the unifi command, you will need to ssh into your pi and run the f
 #To run unifi controller install script
 sudo ./unifi_install.sh
 ```
+
+After the script is run you will be prompted 4 times to configure a few things manually. These will be yes or no questions.
+For the purposes of the PNK I suggest answering them in a Y/Y/N/Y order.
+
+Once the install is done you will be able to access the unifi controller by typing in you raspberry pi's ip address followed by :8443
+
+Example:
+
+```bash
+https://192.168.0.11:8443 # <- replace that ip address with your own
+```
