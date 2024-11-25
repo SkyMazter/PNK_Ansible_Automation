@@ -54,7 +54,28 @@ First you will need to edit the inventory file, there are three main thing you w
 2. The username of the Pi
 3. The password of the Pi
 
-Then you will change your directory to be inside of the playbooks folder within your terminal.
+```bash
+#Edit the inventory file with you own relevant info
+[raspberries]
+192.168.0.89
+
+[raspberries:vars]
+ansible_connection=ssh
+ansible_user=your_username
+ansible_password=your_password
+
+```
+
+Following this you will want to set the database password for MariaDB located on Line 8 of the Wordpress install file,
+this will be relevant later. The default password I set is rootmariadb@pnk, I strongly suggest changing this.
+
+```bash
+#Edit this line in wordpress_install.yml
+mariadb_root_password: "your_password_here"
+```
+
+Lastly you will need to change your directory to be inside of the playbooks folder within your terminal.
+The path will vary for every machine.
 
 ### Running the Playbook
 
@@ -70,10 +91,10 @@ sudo ansible-playbook -i inventory wordpress_install.yml
 sudo ansible-playbook -i inventory unifi_install.yml
 ```
 
-### finishing touches
+### Finishing touches
 
-Its at this point that you should be able to enter
-After running the unifi command, you will need to ssh into your pi and run the following command run the porper install script that is inside the bash file.
+It's at this point that you should be able to enter the Pi's Ip Address into your browser and see the wordpress configuration
+After running the unifi command, you will need to ssh into your pi and run the following command run the install script that is inside the bash file.
 
 ```bash
 #To run unifi controller install script
