@@ -93,7 +93,7 @@ sudo ansible-playbook -i inventory unifi_install.yml
 
 ### Finishing touches
 
-It's at this point that you should be able to enter the Pi's Ip Address into your browser and see the wordpress configuration
+It's at this point that you should be able to enter the Pi's Ip Address into your browser and see the wordpress configuration website.
 After running the unifi command, you will need to ssh into your pi and run the following command run the install script that is inside the bash file.
 
 ```bash
